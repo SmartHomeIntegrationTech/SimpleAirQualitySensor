@@ -9,15 +9,18 @@
 #include <SHIHardware.h>
 #include <SHIMQTT.h>
 #include <SHIMulticastHandler.h>
-#include <SHIRestCommunicator.h>
+#include <SHIOpenhabRestCommunicator.h>
 
-std::shared_ptr<SHI::BME680> bme680 = std::make_shared<SHI::BME680>(Wire, true);
-
-std::shared_ptr<SHI::RestCommunicator> comms =
-    std::make_shared<SHI::RestCommunicator>();
-std::shared_ptr<SHI::MQTT> mqtt = std::make_shared<SHI::MQTT>();
+SHI::BME680Config bmeConfig;
+std::shared_ptr<SHI::BME680> bme680 = std::make_shared<SHI::BME680>(bmeConfig);
+SHI::OpenhabRestCommunicatorConfig ohConfig;
+std::shared_ptr<SHI::OpenhabRestCommunicator> comms =
+    std::make_shared<SHI::OpenhabRestCommunicator>(ohConfig);
+SHI::MQTTConfig mqttConfig;
+std::shared_ptr<SHI::MQTT> mqtt = std::make_shared<SHI::MQTT>(mqttConfig);
+SHI::MulticastHandlerConfig multicastConfig;
 std::shared_ptr<SHI::MulticastHandler> multicastComms =
-    std::make_shared<SHI::MulticastHandler>();
+    std::make_shared<SHI::MulticastHandler>(multicastConfig);
 
 void setup() {
   static String tempName = "";
