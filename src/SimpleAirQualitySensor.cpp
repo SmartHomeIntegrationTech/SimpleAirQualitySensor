@@ -6,11 +6,14 @@
 #include <Arduino.h>
 #include <Preferences.h>
 #include <SHIBME680.h>
+#include <SHIESP32HW.h>
 #include <SHIHardware.h>
 #include <SHIMQTT.h>
 #include <SHIMulticastHandler.h>
 #include <SHIOpenhabRestCommunicator.h>
 
+SHI::ESP32HWConfig espConfig;
+std::shared_ptr<SHI::ESP32HW> esphw = std::make_shared<SHI::ESP32HW>(espConfig);
 SHI::BME680Config bmeConfig;
 std::shared_ptr<SHI::BME680> bme680 = std::make_shared<SHI::BME680>(bmeConfig);
 SHI::OpenhabRestCommunicatorConfig ohConfig;
@@ -23,6 +26,8 @@ std::shared_ptr<SHI::MulticastHandler> multicastComms =
     std::make_shared<SHI::MulticastHandler>(multicastConfig);
 
 void setup() {
+  ets_printf("Entering setup\n");
+  SHI::hw = esphw.get();
   static String tempName = "";
   SHI::hw->addCommunicator(comms);
   SHI::hw->addCommunicator(mqtt);
