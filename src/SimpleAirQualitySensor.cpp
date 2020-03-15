@@ -5,6 +5,8 @@
  */
 #include <Arduino.h>
 #include <Preferences.h>
+// #include <SHIBLEBeacon.h>
+#include <SHIBME280.h>
 #include <SHIBME680.h>
 #include <SHIESP32HW.h>
 #include <SHIHardware.h>
@@ -14,8 +16,21 @@
 
 SHI::ESP32HWConfig espConfig;
 std::shared_ptr<SHI::ESP32HW> esphw = std::make_shared<SHI::ESP32HW>(espConfig);
+#ifdef DUAL_CHANNEL
+SHI::BME280Config indoorConfig;
+SHI::BME280Config outdoorConfig;
+std::shared_ptr<SHI::BME280> indoor =
+    std::make_shared<SHI::BME280>(indoorConfig);
+std::shared_ptr<SHI::BME280> outdoor =
+    std::make_shared<SHI::BME280>(outdoorConfig);
+std::shared_ptr<SHI::SensorGroup> indoorGroup =
+    std::make_shared<SHI::SensorGroup>("indoor");
+std::shared_ptr<SHI::SensorGroup> outdoorGroup =
+    std::make_shared<SHI::SensorGroup>("outdoor");
+#else
 SHI::BME680Config bmeConfig;
 std::shared_ptr<SHI::BME680> bme680 = std::make_shared<SHI::BME680>(bmeConfig);
+#endif
 SHI::OpenhabRestCommunicatorConfig ohConfig;
 std::shared_ptr<SHI::OpenhabRestCommunicator> comms =
     std::make_shared<SHI::OpenhabRestCommunicator>(ohConfig);
@@ -32,10 +47,21 @@ void setup() {
   SHI::hw->addCommunicator(comms);
   SHI::hw->addCommunicator(mqtt);
   SHI::hw->addCommunicator(multicastComms);
+#ifdef DUAL_CHANNEL
+  indoorGroup->addSensor(indoor);
+  outdoorGroup->addSensor(outdoor);
+  SHI::hw->addSensorGroup(indoorGroup);
+  SHI::hw->addSensorGroup(outdoorGroup);
+  Wire1.begin(18, 19);
+  outdoorConfig.useBus = 1;
+  outdoor->reconfigure(&outdoorConfig);
+#else
   SHI::hw->addSensor(bme680);
+#endif
   tempName = "AirQualityMobile" + WiFi.macAddress();
   tempName.replace(".", "_");
   SHI::hw->setup(tempName.c_str());
+  // SHI::Beacon::setupBeacon();
 }
 
 // Function that is looped forever
@@ -43,6 +69,10 @@ void loop(void) {
   uint32_t loopStart = millis();
   SHI::hw->loop();
   int diff = millis() - loopStart;
+  //  if (diff > 100) {
+  // SHI::Beacon::beaconLoop(100);
+  //    diff = millis() - loopStart;
+  //  }
   if (diff < 1000) {
     delay(1000 - diff);
   }
