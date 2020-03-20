@@ -13,6 +13,7 @@
 #include <SHIMQTT.h>
 #include <SHIMulticastHandler.h>
 #include <SHIOpenhabRestCommunicator.h>
+#include <SHIWifiSensor.h>
 
 SHI::ESP32HWConfig espConfig;
 std::shared_ptr<SHI::ESP32HW> esphw = std::make_shared<SHI::ESP32HW>(espConfig);
@@ -31,6 +32,8 @@ std::shared_ptr<SHI::SensorGroup> outdoorGroup =
 SHI::BME680Config bmeConfig;
 std::shared_ptr<SHI::BME680> bme680 = std::make_shared<SHI::BME680>(bmeConfig);
 #endif
+std::shared_ptr<SHI::WifiSensor> wifisensor =
+    std::make_shared<SHI::WifiSensor>();
 SHI::OpenhabRestCommunicatorConfig ohConfig;
 std::shared_ptr<SHI::OpenhabRestCommunicator> comms =
     std::make_shared<SHI::OpenhabRestCommunicator>(ohConfig);
@@ -53,10 +56,12 @@ void setup() {
   SHI::hw->addSensorGroup(indoorGroup);
   SHI::hw->addSensorGroup(outdoorGroup);
   Wire1.begin(18, 19);
-  outdoorConfig.useBus = 1;
-  outdoor->reconfigure(&outdoorConfig);
+  indoorConfig.useBus = 1;
+  indoor->reconfigure(&indoorConfig);
+  indoorGroup->addSensor(wifisensor);
 #else
   SHI::hw->addSensor(bme680);
+  SHI::hw->addSensor(wifisensor);
 #endif
   tempName = "AirQualityMobile" + WiFi.macAddress();
   tempName.replace(".", "_");
